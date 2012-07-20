@@ -1,15 +1,33 @@
-var FS = require('fs');
+var http = require('http'),
+  sys  = require('util'),
+  fs   = require('fs'),
+  ws   = require('ws');
+
+//var http_port = 0xCAFE;
+var http_port = 4000;
+var mouse_device = "/dev/input/event11";
+var heat_start = 0;
+var heat_duration = 0;
 
 
 function zfill(num, len) {return (Array(len).join("0") + num).slice(-len);}
 
-FS.open("/dev/input/event12", "r", function (err, fd) {
+
+http.createServer(function(request, response) {
+	response.writeHead(200, {
+		'Content-Type': 'text/html'
+	});
+	var rs = fs.createReadStream(__dirname + '/index.html');
+	sys.pump(rs, response);
+}).listen(http_port);
+
+fs.open(mouse_device, "r", function (err, fd) {
 	if (err) throw err;
 	var buffer = new Buffer(24),
 	    heating = false;
 
 	function startRead() {
-		FS.read(fd, buffer, 0, 24, null, function (err, bytesRead) {
+		fs.read(fd, buffer, 0, 24, null, function (err, bytesRead) {
 			if (err) throw err;
 		var useconds = 0.0,
 			 seconds = 0.0,
@@ -42,28 +60,35 @@ FS.open("/dev/input/event12", "r", function (err, fd) {
 			if(!(type == 0 || type == 1)) {
 				if(type == 0x10){
 					if(code == 0x2) {
-						console.log("left dn --> ");
+//						console.log("left dn --> ");
 					} 
 					if(code == 0x1){
-						console.log("left up --> ");
+//						console.log("left up --> ");
 					}
 				}
 				if(type == 0x12){
 					if(code == 0x2) {
-						console.log("midd dn --> ");
+//						console.log("midd dn --> ");
 					} 
 					if(code == 0x1){
-						console.log("midd up --> ");
+//						console.log("midd up --> ");
 					}
 				} 	
 				if(type == 0x11){
 					if(code == 0x2) {
-						console.log("righ dn --> ");
 						heating = true;
+            heat_start = process.uptime();
+						console.log("heating...");
 					} 
 					if(code == 0x1){
-						console.log("righ up --> ");
 						heating = false;
+						heat_duration = process.uptime() - heat_start;
+						if(heat_duration < 20.0) {
+							console.log("warming");
+						}   
+						if(heat_duration > 25 ){
+						  console.log("brew " + heat_duration);
+						}
 					}
 				} 	
 			}
@@ -73,4 +98,4 @@ FS.open("/dev/input/event12", "r", function (err, fd) {
 	startRead();
 });
 
-
+console.log("http server listening on port: "+http_port);
