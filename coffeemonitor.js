@@ -39,19 +39,10 @@ var server = http.createServer(function(request, response) {
 	});
 	var rs = fs.createReadStream(__dirname + '/index.html');
 	sys.pump(rs, response);
-}).listen(http_port);
+});
+server.listen(http_port);
 
 var socket = io.listen(server);
-
-socket.on('connection',function(socket) {
-	socket.emit("welcome to the coffeepot");
-	socket.emit("please drink coffee");
-	t=setInterval( function() {
-		var n=rnd();
-		socket.broadcast.emit('stream', {n:n.toString()});
-	}, 4000);
-
-});
 
 
 fs.open(input_device, "r", function (err, fd) {
@@ -65,10 +56,9 @@ fs.open(input_device, "r", function (err, fd) {
 			if (err) throw err;
 
 			mouse_event = decode.mouse_event(buffer);
-
 			if(mouse_event.button == 'R'){
 				if(mouse_event.state == 'D') {
-					socket.emit("het:"+Date());
+					socket.emit("message","het:"+Date());
 					console.log("het:"+Date());
 					dn_stamp = mouse_event.time;
 					console.log("per:"+Date()+"#"+(dn_stamp - dn_last));
@@ -119,7 +109,18 @@ function startTimeout(){
 	setTimeout(handle_timeout, warming_interval);
 }
 
-startTimeout();
 
+socket.on('connection',function(client) {
+	console.log('connected to client');
+	client.emit("message","welcome to the coffeepot");
+	client.emit("message","please drink coffee");
+	t=setInterval( function() {
+		var n=42;
+		client.emit("message", n.toString());
+	}, 4000);
+});
+
+
+startTimeout();
 console.log("http server listening on port: "+http_port);
 

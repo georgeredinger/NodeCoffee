@@ -1,14 +1,15 @@
-<!DOCTYPE html> 
-<html lang="en"> 
+<!DOCTYPE html>
+<meta charset="UTF-8"> 
 <html>
   <head>
-	  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-
+	  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+		
+		<script type="text/javascript" src="http://localhost:4000/socket.io/socket.io.js"></script>
+		
 	<script type="text/javascript">
     $(document).ready(function() {
-			socket = new io.Socket('localhost',{port:4000});
-			socket.connect();
+			//socket = new io.Socket('127.0.0.1',{port:4000});
+			socket = io.connect('127.0.0.1:4000');
 			console.log("connecting...");
 			socket.on('connect', function() {
 				console.log('connect');
