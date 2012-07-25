@@ -45,6 +45,33 @@ server.listen(http_port);
 var socket = io.listen(server);
 
 
+socket.on('connection',function(client) {
+	console.log('connected to client');
+	client.emit("message","Drink Coffee");
+	
+function handle_timeout() {
+	if(!heating) {
+		if(happenen) {
+			console.log("on :"+Date());
+				  client.emit("message","on :"+Date());
+		}else {
+			console.log("off:"+Date());
+					  client.emit("message","off:"+Date());
+		}
+	}
+	if(brew_last != 0.0) {
+		console.log("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+				  client.emit("message","last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+	}
+	startTimeout(handle_timeout, warming_interval);
+}
+
+function startTimeout(){
+	happenen = false;
+	setTimeout(handle_timeout, warming_interval);
+}
+
+
 fs.open(input_device, "r", function (err, fd) {
 	if (err) throw err;
 	var buffer = new Buffer(24),
@@ -58,10 +85,11 @@ fs.open(input_device, "r", function (err, fd) {
 			mouse_event = decode.mouse_event(buffer);
 			if(mouse_event.button == 'R'){
 				if(mouse_event.state == 'D') {
-					socket.emit("message","het:"+Date());
+					client.emit("message","het:"+Date());
 					console.log("het:"+Date());
 					dn_stamp = mouse_event.time;
 					console.log("per:"+Date()+"#"+(dn_stamp - dn_last));
+					client.emit("message","per:"+Date()+"#"+(dn_stamp - dn_last));
 					dn_last = dn_stamp;
 					happenen=true;
 					heating=true;
@@ -70,11 +98,11 @@ fs.open(input_device, "r", function (err, fd) {
 					up_stamp = mouse_event.time;
 					if((up_stamp - dn_stamp) > brew_time){
 						console.log("brw:"+Date());
-						//      socket.broadcast.send("brw:"+Date());
+						client.emit("message","brw:"+Date());
 						brew_last = Date.now();
 					}
 					console.log("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
-					//     socket.broadcast.send("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
+					client.emit("message","dur:"+ Date()+"#" + (up_stamp-dn_stamp));
 					up_last = up_stamp;
 					happenen=true;
 					heating=false;
@@ -86,41 +114,9 @@ fs.open(input_device, "r", function (err, fd) {
 	startRead();
 });
 
-// if nothing happens for 5 minutes, call the coffee pot "off"
-function handle_timeout() {
-	if(!heating) {
-		if(happenen) {
-			console.log("on :"+Date());
-			//	  socket.broadcast.send("on :"+Date());
-		}else {
-			console.log("off:"+Date());
-			//		  socket.broadcast.send("off:"+Date());
-		}
-	}
-	if(brew_last != 0.0) {
-		console.log("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
-		//		  socket.broadcast.send("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
-	}
-	startTimeout(handle_timeout, warming_interval);
-}
-
-function startTimeout(){
-	happenen = false;
-	setTimeout(handle_timeout, warming_interval);
-}
-
-
-socket.on('connection',function(client) {
-	console.log('connected to client');
-	client.emit("message","welcome to the coffeepot");
-	client.emit("message","please drink coffee");
-	t=setInterval( function() {
-		var n=42;
-		client.emit("message", n.toString());
-	}, 4000);
+startTimeout();
 });
 
 
-startTimeout();
 console.log("http server listening on port: "+http_port);
 

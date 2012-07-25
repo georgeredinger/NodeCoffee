@@ -18,14 +18,14 @@
 			socket.on('message', function(message) {
 				var data = message.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 				$('#log ul').append('<li>' + data + '</li>');          
-				window.scrollBy(0, 1000000000000000);
+        window.scrollTo(0, document.body.scrollHeight);
 			});
 		});
 	</script>
 	</head>
 	<style type="text/css">
     body {
-    	background-color: #666;
+    	background-color: #AA5303;
     	color: fff;
     	font-size: 14px;
     	margin: 0;
