@@ -1,19 +1,39 @@
 var http = require('http'),
-  sys  = require('util'),
-  fs   = require('fs'),
-  ws   = require('ws');
+sys  = require('util'),
+fs   = require('fs'),
+io = require('socket.io');
+
+var  decode   = require('./decoders');
 
 //var http_port = 0xCAFE;
 var http_port = 4000;
-var mouse_device = "/dev/input/event11";
 var heat_start = 0;
+var input_device = '';
 var heat_duration = 0;
+var	dn_stamp = 0.0,
+up_stamp = 0.0,
+dn_last = 0.0,
+up_last = 0.0,
+brew_last = 0.0,
+heating = false,
+brew_time = 5*60*1000,
+warming_interval = 4*60*1000,
+happenen = false;
 
+if(process.env.input !=''){
+	input_device="/dev/input/"+process.env.input;
+}else{
+	if(process.argv.length != 3) {
+		console.log("supply input device name");
+		console.log("eg, node "+process.argv[1]+ "event13");
+		exit(0);
+	}else{
+		input_device="/dev/input/"+process.argv[2];
+	}
+}
+console.log("readng events from "+input_device);
 
-function zfill(num, len) {return (Array(len).join("0") + num).slice(-len);}
-
-
-http.createServer(function(request, response) {
+var server = http.createServer(function(request, response) {
 	response.writeHead(200, {
 		'Content-Type': 'text/html'
 	});
@@ -21,81 +41,85 @@ http.createServer(function(request, response) {
 	sys.pump(rs, response);
 }).listen(http_port);
 
-fs.open(mouse_device, "r", function (err, fd) {
+var socket = io.listen(server);
+
+socket.on('connection',function(socket) {
+	socket.emit("welcome to the coffeepot");
+	socket.emit("please drink coffee");
+	t=setInterval( function() {
+		var n=rnd();
+		socket.broadcast.emit('stream', {n:n.toString()});
+	}, 4000);
+
+});
+
+
+fs.open(input_device, "r", function (err, fd) {
 	if (err) throw err;
 	var buffer = new Buffer(24),
-	    heating = false;
+	heating = false,
+	mouse_event = {};
 
 	function startRead() {
 		fs.read(fd, buffer, 0, 24, null, function (err, bytesRead) {
 			if (err) throw err;
-		var useconds = 0.0,
-			 seconds = 0.0,
-			 type = 0.0,
-       code = 0.0,
-       value =0.0,
-			 data = '';			 
 
-			seconds = buffer[3]
-			seconds += seconds * 255+buffer[2]
-			seconds += seconds * 255+buffer[1]
-			seconds += seconds * 255+buffer[0]
+			mouse_event = decode.mouse_event(buffer);
 
-      useconds = buffer[7]
-			useconds += useconds * 255+buffer[6]
-			useconds += useconds * 255+buffer[5]
-			useconds += useconds * 255+buffer[4]
-
-			type = buffer[9];
-			type = type + buffer[10];
-
-			code = buffer[12];
-			code = code + buffer[11];
-
-			value = buffer[14];
-			value = value + buffer[13];
-
-			data = seconds+':'+zfill(useconds,6)+':'+ zfill(type.toString(2),16)+':'+zfill(code.toString(2),16)+":"+zfill(value.toString(2),16);
-
-			if(!(type == 0 || type == 1)) {
-				if(type == 0x10){
-					if(code == 0x2) {
-//						console.log("left dn --> ");
-					} 
-					if(code == 0x1){
-//						console.log("left up --> ");
+			if(mouse_event.button == 'R'){
+				if(mouse_event.state == 'D') {
+					socket.emit("het:"+Date());
+					console.log("het:"+Date());
+					dn_stamp = mouse_event.time;
+					console.log("per:"+Date()+"#"+(dn_stamp - dn_last));
+					dn_last = dn_stamp;
+					happenen=true;
+					heating=true;
+				} 
+				if(mouse_event.state == 'U'){
+					up_stamp = mouse_event.time;
+					if((up_stamp - dn_stamp) > brew_time){
+						console.log("brw:"+Date());
+						//      socket.broadcast.send("brw:"+Date());
+						brew_last = Date.now();
 					}
+					console.log("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
+					//     socket.broadcast.send("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
+					up_last = up_stamp;
+					happenen=true;
+					heating=false;
 				}
-				if(type == 0x12){
-					if(code == 0x2) {
-//						console.log("midd dn --> ");
-					} 
-					if(code == 0x1){
-//						console.log("midd up --> ");
-					}
-				} 	
-				if(type == 0x11){
-					if(code == 0x2) {
-						heating = true;
-            heat_start = process.uptime();
-						console.log("heating...");
-					} 
-					if(code == 0x1){
-						heating = false;
-						heat_duration = process.uptime() - heat_start;
-						if(heat_duration < 20.0) {
-							console.log("warming");
-						}   
-						if(heat_duration > 25 ){
-						  console.log("brew " + heat_duration);
-						}
-					}
-				} 	
-			}
+			} 	
 			startRead();
 		});
 	}
 	startRead();
 });
 
+// if nothing happens for 5 minutes, call the coffee pot "off"
+function handle_timeout() {
+	if(!heating) {
+		if(happenen) {
+			console.log("on :"+Date());
+			//	  socket.broadcast.send("on :"+Date());
+		}else {
+			console.log("off:"+Date());
+			//		  socket.broadcast.send("off:"+Date());
+		}
+	}
+	if(brew_last != 0.0) {
+		console.log("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+		//		  socket.broadcast.send("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+	}
+	startTimeout(handle_timeout, warming_interval);
+}
+
+function startTimeout(){
+	happenen = false;
+	setTimeout(handle_timeout, warming_interval);
+}
+
+startTimeout();
+
 console.log("http server listening on port: "+http_port);
+
