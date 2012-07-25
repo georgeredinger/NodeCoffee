@@ -1,9 +1,9 @@
 var http = require('http'),
 sys  = require('util'),
 fs   = require('fs'),
-io = require('socket.io');
-
-var  decode   = require('./decoders');
+io = require('socket.io'),
+events = require('./events.js'),
+decode   = require('./decoders');
 
 //var http_port = 0xCAFE;
 var http_port = 4321;
@@ -48,6 +48,10 @@ var socket = io.listen(server);
 socket.on('connection',function(client) {
 	console.log('connected to client');
 	client.emit("message","Drink Coffee");
+  for(m in events.recent()) {
+		client.emit("message",m.name+":"+m.ts);
+		console.log("Sending history:"+m.name+":"+m.ts);
+	}
 
 	function handle_timeout() {
 		if(!heating) {
@@ -86,6 +90,7 @@ socket.on('connection',function(client) {
 				if(mouse_event.button == 'R'){
 					happenen=Date.now();
 					if(mouse_event.state == 'D') {
+						events.insert("het");
 						client.emit("message","het:"+Date());
 						console.log("het:"+Date());
 						dn_stamp = mouse_event.time;
@@ -97,10 +102,12 @@ socket.on('connection',function(client) {
 					if(mouse_event.state == 'U'){
 						up_stamp = mouse_event.time;
 						if((up_stamp - dn_stamp) > brew_time){
+						  events.insert("brw");
 							console.log("brw:"+Date());
 							client.emit("message","brw:"+Date());
 							brew_last = Date.now();
 						}
+						events.insert("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
 						console.log("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
 						client.emit("message","dur:"+ Date()+"#" + (up_stamp-dn_stamp));
 						up_last = up_stamp;
