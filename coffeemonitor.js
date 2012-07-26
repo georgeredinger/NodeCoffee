@@ -2,7 +2,7 @@ var http = require('http'),
 sys  = require('util'),
 fs   = require('fs'),
 io = require('socket.io'),
-events = require('./events.js'),
+events = require('./events'),
 decode   = require('./decoders');
 
 //var http_port = 0xCAFE;
@@ -19,7 +19,7 @@ heating = false,
 brew_time = 5*60*1000,
 warming_interval = 4*60*1000,
 happenen = Date.now();
-
+var ticks=0;
 if(process.env.input !=''){
 	input_device="/dev/input/"+process.env.input;
 }else{
@@ -48,9 +48,10 @@ var socket = io.listen(server);
 socket.on('connection',function(client) {
 	console.log('connected to client');
 	client.emit("message","Drink Coffee");
-  for(m in events.recent()) {
-		client.emit("message",m.name+":"+m.ts);
-		console.log("Sending history:"+m.name+":"+m.ts);
+	m=events.recent();
+  for(var i in m) {
+		client.emit("message",m[i].name+":"+m[i].ts);
+		console.log("Sending history:"+m[i].name+":"+m[i].ts);
 	}
 
 	function handle_timeout() {
@@ -71,7 +72,6 @@ socket.on('connection',function(client) {
 	}
 
 	function startTimeout(){
-		happenen = Date.now();
 		setTimeout(handle_timeout, warming_interval);
 	}
 
@@ -81,7 +81,6 @@ socket.on('connection',function(client) {
 		var buffer = new Buffer(24),
 		heating = false,
 		mouse_event = {};
-
 		function startRead() {
 			fs.read(fd, buffer, 0, 24, null, function (err, bytesRead) {
 				if (err) throw err;
@@ -90,26 +89,33 @@ socket.on('connection',function(client) {
 				if(mouse_event.button == 'R'){
 					happenen=Date.now();
 					if(mouse_event.state == 'D') {
-						events.insert("het");
+						events.insert("het:"+Date());
 						client.emit("message","het:"+Date());
 						console.log("het:"+Date());
 						dn_stamp = mouse_event.time;
-						console.log("per:"+Date()+"#"+(dn_stamp - dn_last));
-						client.emit("message","per:"+Date()+"#"+(dn_stamp - dn_last));
-						dn_last = dn_stamp;
+						var period = dn_stamp - dn_last;
+						console.log("per:"+Date()+"#"+period);
+						client.emit("message","per:"+Date()+"#"+period+"("+dn_stamp+"-"+dn_last+")");
+						//TODO: seems klugie. mouse event per connection?
+		        if(ticks>0) {
+							dn_last = dn_stamp;
+						}
+
 						heating=true;
 					} 
 					if(mouse_event.state == 'U'){
+						ticks=0;
 						up_stamp = mouse_event.time;
-						if((up_stamp - dn_stamp) > brew_time){
+						var duration = up_stamp - dn_stamp;
+						if(duration > brew_time){
 						  events.insert("brw");
 							console.log("brw:"+Date());
 							client.emit("message","brw:"+Date());
 							brew_last = Date.now();
 						}
-						events.insert("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
-						console.log("dur:"+ Date()+"#" + (up_stamp-dn_stamp));
-						client.emit("message","dur:"+ Date()+"#" + (up_stamp-dn_stamp));
+						events.insert("dur:"+ Date()+"#" + duration);
+						console.log("dur:"+ Date()+"#" + duration);
+						client.emit("message","dur:"+ Date()+"#" + duration);
 						up_last = up_stamp;
 						heating=false;
 					}
@@ -122,5 +128,6 @@ socket.on('connection',function(client) {
 	startTimeout();
 });
 
+happenen = Date.now();
 console.log("http server listening on port: "+http_port);
 

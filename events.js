@@ -4,29 +4,16 @@ var events = [
 	name: "Start",
 	ts: Date.now()
 },
-{
-	id: 2,
-	name: "Eney",
-	ts: Date.now()
-},
-{
-	id: 3,
-	name: "Meney",
-	ts: Date.now()
-}
 ];
 
 module.exports.all = events;
 
 module.exports.recent = function(){
-	var finish = events.length + 1;
-	var start = finish-10;
-	if(start < 0){
-		start=0;
+  if(events.length > 10000){
+		events=events.slice(-5000);
 	}
-	return events.slice(start,finish);
+	return events.slice(-100);
 }
-
 
 module.exports.new = function(){
 	return{
