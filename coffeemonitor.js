@@ -58,14 +58,17 @@ socket.on('connection',function(client) {
 		if(!heating) {
 			if((Date.now()-happenen) < warming_interval) {
 				console.log("on :"+Date());
+			  events.insert("on :"+Date());
 				client.emit("message","on :"+Date());
 			}else {
 				console.log("off:"+Date());
+			  events.insert("off:"+Date());
 				client.emit("message","off:"+Date());
 			}
 		}
 		if(brew_last != 0.0) {
 			console.log("last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+			events.insert("message","last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
 			client.emit("message","last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
 		}
 		startTimeout(handle_timeout, warming_interval);
@@ -94,10 +97,11 @@ socket.on('connection',function(client) {
 						console.log("het:"+Date());
 						dn_stamp = mouse_event.time;
 						var period = dn_stamp - dn_last;
+						events.insert("per:"+Date()+"#"+period+"("+dn_stamp+"-"+dn_last+")");
 						console.log("per:"+Date()+"#"+period);
 						client.emit("message","per:"+Date()+"#"+period+"("+dn_stamp+"-"+dn_last+")");
 						//TODO: seems klugie. mouse event per connection?
-		        if(ticks>0) {
+		        if(ticks++ == 0) {
 							dn_last = dn_stamp;
 						}
 
@@ -108,7 +112,7 @@ socket.on('connection',function(client) {
 						up_stamp = mouse_event.time;
 						var duration = up_stamp - dn_stamp;
 						if(duration > brew_time){
-						  events.insert("brw");
+						  events.insert("brw:"+Date());
 							console.log("brw:"+Date());
 							client.emit("message","brw:"+Date());
 							brew_last = Date.now();
