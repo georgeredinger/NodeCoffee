@@ -22,10 +22,13 @@ module.exports.new = function(){
 	};
 }
 
-module.exports.insert = function(message){
+module.exports.insert = function(io,message){
 	var new_id = events.length + 1;
 	events.push({id:new_id, ts:Date.now(),name:message});
 	console.log("inserted:" + events[events.length-1].id+":"+events[events.length-1].ts+":"+events[events.length-1].name);
+	if(io) {
+  	io.sockets.emit("message",message);
+	}
 	return new_id;
 }
 

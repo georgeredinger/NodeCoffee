@@ -52,7 +52,7 @@ function mid(e){
   }
 }
 // read all mouse events from /dev/input/mice
-var mouse = new mousemod.Mouse(7);
+var mouse = new mousemod.Mouse(1);
 mouse.on('L', lel);
 mouse.on('R', rig);
 mouse.on('M', mid);
