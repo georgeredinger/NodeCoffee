@@ -1,9 +1,9 @@
 var events = [
 	{
-	id: 1,
-	name: "Start",
-	ts: Date.now()
-},
+  	id: 1,
+  	name: "Start",
+  	ts: Date.now()
+  },
 ];
 
 module.exports.all = events;
