@@ -6,8 +6,7 @@ var decode   = require('./decode_mouse_buffer');
 function Mouse(mouseid) {
   this.wrap('onOpen');
   this.wrap('onRead');
-  //this.buf = new Buffer(3);
-  this.buf = new Buffer(24);
+  this.buf = new Buffer(24); //why 24 bytes? what does each byte mean?
   fs.open('/dev/input/event' + mouseid , 'r', this.onOpen);
 }
 
@@ -44,6 +43,5 @@ Mouse.prototype.close = function(callback) {
   fs.close(this.fd, (function(){console.log(this);}));
   this.fd = undefined;
 }
-
 
 exports.Mouse = Mouse;
