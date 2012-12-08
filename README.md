@@ -1,14 +1,27 @@
-# Monitor the office coffee pot with nodejs 
+# NodeCoffee
 
-### Todo:
+Coffee Pot Monioring
 
-* configure udev permissions on mouse input devices (/dev/input/event?) so node process has read permissions
-* Detect mouse(s) and associate with sensors, possibly with a config file
-* Serve the pots status via a http server
-* Tweet coffee done
-* Control X10 devices to indicate coffee done and age
-* detect pot brew, heating and off states
-* use events module such that mouse events are converted to coffee events
-  such as brewing, heating, brew done, off, on and are forwared to socket.io listeners. event history should be kept even when there are not listeners and listeners receive recent coffee event history on socket.io connet
+## Getting Started
+Install the module with: `npm install NodeCoffee`
 
+```javascript
+var NodeCoffee = require('NodeCoffee');
+NodeCoffee.awesome(); // "awesome"
+```
 
+## Documentation
+_(Coming soon)_
+
+## Examples
+_(Coming soon)_
+
+## Contributing
+In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [grunt](https://github.com/cowboy/grunt).
+
+## Release History
+_(Nothing yet)_
+
+## License
+Copyright (c) 2012 George Redinger  
+Licensed under the MIT license.

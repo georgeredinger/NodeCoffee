@@ -3,7 +3,8 @@ sys  = require('util'),
 fs   = require('fs'),
 io = require('socket.io'),
 events = require('./events'),
-mousemod    = require('./mouse');
+mousemod    = require('./mouse'),
+mouse_device = require('./findmouse');
 var http_port = 4321;
 var heat_start = 0;
 var input_device = '';
@@ -22,6 +23,7 @@ happenen = Date.now();
 var ticks=0;
 var startRDown=0.0;
 var gclient;
+
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {
@@ -59,11 +61,11 @@ function monitor_mouse() {
   	function startTimeout() {
   		setTimeout(handle_timeout, 1000);
   	}
-  
+
   	function err(e) {
   		console.log("error " + e);
   	}
-  
+
   	function rig(e){
   		var delta=0.0;
       happenen = Date.now();
@@ -79,13 +81,13 @@ function monitor_mouse() {
   		  brewing=false;
   			}
   	}
-  
- 	var mouse = new mousemod.Mouse(1);
+
+
+var mouse = new mousemod.Mouse(mouse_device.mouse_device());
   	mouse.on('R', rig);
   	mouse.on('error', err);
   	startTimeout();
 };
-
 
 var socket = io.listen(server);
 socket.set('log level',1); //turn off logging
