@@ -9,6 +9,7 @@ var heat_start = 0;
 var input_device = '';
 var heat_duration = 0;
 var	dn_stamp = 0.0,
+pot_off = false;
 up_stamp = 0.0,
 dn_last = 0.0,
 up_last = 0.0,
@@ -43,7 +44,10 @@ function monitor_mouse() {
   		}
   		if(!heating) {
   			if((Date.now()-happenen) > warming_interval) {
-  				events.insert(socket,"off:"+Date());
+					if(!pot_off){
+  				  events.insert(socket,"pot off: "+Date());
+						pot_off = true;
+					}
   			}
   		}
   		if(brew_last != 0.0) {
@@ -64,12 +68,13 @@ function monitor_mouse() {
   		var delta=0.0;
       happenen = Date.now();
   		if(e.state == 'D'){
+			  pot_off=false;
   			startRDown = e.time;
   			heating=true;
-  			events.insert(socket,"on :"+Date());
+  			events.insert(socket,"heat on :"+Date());
   		} else {
   			deltaT=e.time-startRDown;
-  			events.insert(socket,"off: "+ Date() + ' ' + deltaT);
+  			events.insert(socket,"heat off: "+ Date() + ' ' + deltaT);
   			heating=false;
   		  brewing=false;
   			}
