@@ -5,6 +5,7 @@ io = require('socket.io'),
 events = require('./events'),
 mousemod    = require('./mouse'),
 mouse_device = require('./findmouse');
+tweet = require('./tweet');
 var http_port = 4321;
 var heat_start = 0;
 var input_device = '';
@@ -41,6 +42,7 @@ function monitor_mouse() {
   				if(!brewing) {
   					brewing=true;
   				  events.insert(socket,"brewing :"+Date());
+				    tweet.tweet();
   				}
   			}
   		}
@@ -57,7 +59,7 @@ function monitor_mouse() {
   		}
   		startTimeout(handle_timeout, 1000);
   	}
-  
+
   	function startTimeout() {
   		setTimeout(handle_timeout, 1000);
   	}
