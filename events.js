@@ -12,7 +12,7 @@ module.exports.recent = function(){
   if(events.length > 10000){
 		events=events.slice(-5000);
 	}
-	return events.slice(-100);
+	return events.slice(-500);
 }
 
 module.exports.new = function(){
