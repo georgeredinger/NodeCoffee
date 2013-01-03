@@ -6,11 +6,15 @@ events = require('./events'),
 mousemod    = require('./mouse'),
 mouse_device = require('./findmouse');
 tweet = require('./tweet');
+
 var http_port = 4321;
 var heat_start = 0;
 var input_device = '';
 var heat_duration = 0;
-var	dn_stamp = 0.0,
+var	dn_stamp = 0.0;
+var ticks=0;
+var startRDown=0.0;
+var gclient,
 pot_off = false;
 up_stamp = 0.0,
 dn_last = 0.0,
@@ -21,10 +25,6 @@ brewing = false,
 brew_time = 5*60*1000,
 warming_interval = 4*60*1000,
 happenen = Date.now();
-var ticks=0;
-var startRDown=0.0;
-var gclient;
-
 
 var server = http.createServer(function(request, response) {
 	response.writeHead(200, {
@@ -75,10 +75,12 @@ function monitor_mouse() {
 			  pot_off=false;
   			startRDown = e.time;
   			heating=true;
-  			events.insert(socket,"heat on :"+Date());
+  //			events.insert(socket,"heat on :"+Date());
   		} else {
   			deltaT=e.time-startRDown;
-  			events.insert(socket,"heat off: "+ Date() + ' ' + deltaT);
+				if(deltaT > brew_time) {
+  			  events.insert(socket,"Brew time: "+ Date() + ' ' + deltaT);
+				}
   			heating=false;
   		  brewing=false;
   			}
