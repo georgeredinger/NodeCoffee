@@ -78,7 +78,7 @@ function monitor_mouse() {
   //			events.insert(socket,"heat on :"+Date());
   		} else {
   			deltaT=e.time-startRDown;
-				if(deltaT > brew_time) {
+				if(brewing) {
   			  events.insert(socket,"Brew time: "+ Date() + ' ' + deltaT);
 				}
   			heating=false;
