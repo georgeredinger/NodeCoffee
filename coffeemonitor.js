@@ -4,6 +4,7 @@ fs   = require('fs'),
 io = require('socket.io'),
 events = require('./events'),
 mousemod    = require('./mouse'),
+path = require('path'),
 mouse_device = require('./findmouse');
 tweet = require('./tweet');
 
@@ -26,13 +27,60 @@ brew_time = 5*60*1000,
 warming_interval = 4*60*1000,
 happenen = Date.now();
 
-var server = http.createServer(function(request, response) {
-	response.writeHead(200, {
-		'Content-Type': 'text/html'
+var server  = http.createServer(function (request, response) {
+console.log("begin");
+	var filePath = '.' + request.url;
+	if (filePath == './'){
+		filePath = './index.html';
+    console.log("index.html");
+	}
+
+	var extname = path.extname(filePath);
+	var contentType = 'text/html';
+	switch (extname) {
+		case '.js':
+			contentType = 'text/javascript';
+      console.log("js");
+		break;
+		case '.css':
+			contentType = 'text/css';
+      console.log("css");
+		break;
+	}
+
+  console.log(filePath);
+
+	fs.exists(filePath, function(exists) {
+
+		if (exists) {
+			fs.readFile(filePath, function(error, content) {
+				if (error) {
+					response.writeHead(500);
+					response.end();
+				}
+				else {
+					response.writeHead(200, { 'Content-Type': contentType });
+					response.end(content, 'utf-8');
+				}
+			});
+		}
+		else {
+			response.writeHead(404);
+			response.end();
+		}
 	});
-	var rs = fs.createReadStream(__dirname + '/index.html');
-	sys.pump(rs, response);
 });
+
+
+
+
+//var server = http.createServer(function(request, response) {
+//	response.writeHead(200, {
+//		'Content-Type': 'text/html'
+//	});
+//	var rs = fs.createReadStream(__dirname + '/index.html');
+//	sys.pump(rs, response);
+//});
 server.listen(http_port);
 
 function monitor_mouse() {
