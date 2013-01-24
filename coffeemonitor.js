@@ -132,7 +132,8 @@ function monitor_mouse() {
   	}
 
   	function rig(e){
-  		var delta=0.0;
+  		var delta=0.0,
+			    ts,brew;
       happenen = Date.now();
   		if(e.state == 'D'){
 			  pot_off=false;
@@ -141,9 +142,12 @@ function monitor_mouse() {
   //			events.insert(socket,"heat on :"+Date());
   		} else {
   			deltaT=e.time-startRDown;
+        ts = new Date().getTime();
 				if(brewing) {
+					brew=[ts,deltaT];
   			  events.insert(socket,"Brew time: "+ Date() + ' ' + deltaT);
-					fs.appendFile('brew.log',new Date().getTime()+' '+deltaT+'\n', function (err) {
+		      client.emit("message",brew);
+					fs.appendFile('brew.log',ts + ' ' + deltaT+'\n', function (err) {
 						 if (err)
 						  throw err;
 				  });
