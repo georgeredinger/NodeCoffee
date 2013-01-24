@@ -8,26 +8,53 @@
 	  <script type="text/javascript" src="http://coffee.redinger.me:4321/jquery.flot.js"></script> 
 		<!--		<script src="http://localhost:4321/socket.io/socket.io.js"></script> -->
 		
-	<script type="text/javascript">
-    $(document).ready(function() {
-			socket = io.connect('http://coffee.redinger.me:4321');
-			//socket = io.connect('http://localhost:4321');
-			console.log("connecting...");
-			socket.on('connect', function() {
-				console.log('connect');
-		  });
+		<script type="text/javascript">
+var d1=[];
 
-			socket.on('message', function(message) {
-				var data = message.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-				$('#log ul').append('<li>' + data + '</li>');          
-        window.scrollTo(0, document.body.scrollHeight);
-			});
-		});
-	</script>
+	function re_flot() {
+    console.log("re_flot");
+		var d=[
+		{ data: d1, label:'Brew Length'},
+	  ];
+  	$.plot(
+		$('#flot'), 
+		d,
+		{
+			xaxis:{mode:'time', timeFormat:'%d', tickSize:[1, "day"]},
+			grid: { hoverable: true, clickable: true },
+			tooltip: true,
+			tooltipOpts: {
+				content: "%s for %x was %y.2",
+				dateFormat: "%y-%0m-%0d",
+				xDateFormat: "%H:%M:%S",
+			},
+			yaxis: {min:0, max: 700,  tickSize: 50,hoverable: true, clickable: true}, 
+		}
+	);
+	};
+
+$(document).ready(function() {
+	socket = io.connect('http://coffee.redinger.me:4321');
+	//socket = io.connect('http://localhost:4321');
+	console.log("connecting...");
+	socket.on('connect', function() {
+		console.log('connect');
+	});
+
+	socket.on('message', function(message) {
+		$('#log ul').append('<li>' + message + '</li>');          
+		d1.push(message);
+		window.scrollTo(0, document.body.scrollHeight);
+		re_flot();
+	});
+
+});
+		</script>
 	</head>
 	<style type="text/css">
     body {
-    	background-color: #AA5303;
+//    	background-color: #AA5303;
+    	background-color: white;
     	color: fff;
     	font-size: 14px;
     	margin: 0;
@@ -63,6 +90,7 @@
 	</style>
   <body>
     <p> Welcome to the Office Coffee Pot </p>
+		<div id="flot" style="width:900px;height:400px;"> </div>
 		<div id="log"> <ul> </ul> </div>
   </body>
 </html>

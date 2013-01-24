@@ -27,6 +27,21 @@ brew_time = 5*60*1000,
 warming_interval = 4*60*1000,
 happenen = Date.now();
 
+var brews =  [];
+
+fs.readFileSync('brew.log').toString().split('\n').forEach(function (line) { 
+	var fields,ts,brew_time,data_arr;
+
+			fields = line.split(/\s+/);
+			ts = parseInt(fields[0]);
+			brew_time = parseFloat(fields[1]);
+	  	data_arr=[ts,brew_time];
+			//console.log(data_arr);
+			brews.push(data_arr)
+});
+			var last_line_of_file_is_empty_with_NaNs=brews.pop();
+
+
 var server  = http.createServer(function (request, response) {
 console.log("begin");
 	var filePath = '.' + request.url;
@@ -128,6 +143,10 @@ function monitor_mouse() {
   			deltaT=e.time-startRDown;
 				if(brewing) {
   			  events.insert(socket,"Brew time: "+ Date() + ' ' + deltaT);
+					fs.appendFile('brew.log',new Date().getTime()+' '+deltaT+'\n', function (err) {
+						 if (err)
+						  throw err;
+				  });
 				}
   			heating=false;
   		  brewing=false;
@@ -149,9 +168,9 @@ socket.on('connection',function(client) {
 	client.emit("message","Drink Coffee");
 	m=events.recent();
 
-	for(var i in m) {
-		client.emit("message",m[i].name+":"+m[i].ts);
-		console.log("Sending history:"+m[i].name+":"+m[i].ts);
+	for(var i in brews) {
+		client.emit("message",brews[i]);
+//		console.log("Sending history:"+brews[i]);
 	}
 });
 
