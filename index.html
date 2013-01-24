@@ -10,7 +10,8 @@
 		<!--		<script src="http://localhost:4321/socket.io/socket.io.js"></script> -->
 		
 		<script type="text/javascript">
-var d1=[];
+    var d1=[];
+    zone_delta=(new Date()).getTimezoneOffset()*60000;
 
 	function re_flot() {
     console.log("re_flot");
@@ -43,7 +44,8 @@ $(document).ready(function() {
 	});
 
 	socket.on('message', function(message) {
-		$('#log ul').append('<li>' + message + '</li>');          
+	//	$('#log ul').append('<li>' + message + '</li>');          
+	  message[0] = message[0]-zone_delta;
 		d1.push(message);
 		window.scrollTo(0, document.body.scrollHeight);
 		re_flot();
@@ -54,8 +56,8 @@ $(document).ready(function() {
 	</head>
 	<style type="text/css">
     body {
-//    	background-color: #AA5303;
-    	background-color: white;
+    	background-color: #AA5303;
+//    	background-color: white;
     	color: fff;
     	font-size: 14px;
     	margin: 0;
