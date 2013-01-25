@@ -39,8 +39,8 @@ fs.readFileSync('brew.log').toString().split('\n').forEach(function (line) {
 			//console.log(data_arr);
 			brews.push(data_arr)
 });
-			var last_line_of_file_is_empty_with_NaNs=brews.pop();
 
+var last_line_of_file_is_empty_with_NaNs=brews.pop();
 
 var server  = http.createServer(function (request, response) {
 console.log("begin");
@@ -66,7 +66,6 @@ console.log("begin");
   console.log(filePath);
 
 	fs.exists(filePath, function(exists) {
-
 		if (exists) {
 			fs.readFile(filePath, function(error, content) {
 				if (error) {
@@ -132,6 +131,7 @@ function monitor_mouse() {
   	}
 
   	function rig(e){
+			console.log("rig:"+e.time+' '+e.state);
   		var delta=0.0,
 			    ts,brew;
       happenen = Date.now();
@@ -139,24 +139,21 @@ function monitor_mouse() {
 			  pot_off=false;
   			startRDown = e.time;
   			heating=true;
-  //			events.insert(socket,"heat on :"+Date());
   		} else {
-  			deltaT=e.time-startRDown;
+  			deltaT = e.time - startRDown;
         ts = new Date().getTime();
 				if(brewing) {
-					brew=[ts,deltaT];
-  			  events.insert(socket,"Brew time: "+ Date() + ' ' + deltaT);
-		      client.emit("message",brew);
-					fs.appendFile('brew.log',ts + ' ' + deltaT+'\n', function (err) {
+					brew = [ts,deltaT];
+  			  events.insert(socket,brew);
+					fs.appendFile('brew.log',ts + ' ' + deltaT + '\n', function (err) {
 						 if (err)
-						  throw err;
+				  		  throw err;
 				  });
 				}
   			heating=false;
   		  brewing=false;
   			}
   	}
-
 
 var mouse = new mousemod.Mouse(mouse_device.mouse_device());
   	mouse.on('R', rig);
@@ -174,7 +171,6 @@ socket.on('connection',function(client) {
 
 	for(var i in brews) {
 		client.emit("message",brews[i]);
-//		console.log("Sending history:"+brews[i]);
 	}
 });
 
