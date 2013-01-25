@@ -1,3 +1,4 @@
+var development=false;
 var http = require('http'),
 sys  = require('util'),
 fs   = require('fs'),
@@ -22,9 +23,15 @@ dn_last = 0.0,
 up_last = 0.0,
 brew_last = 0.0,
 heating = false,
-brewing = false,
-brew_time = 5*60*1000,
-warming_interval = 4*60*1000,
+brewing = false;
+if(development) {
+  var brew_time = 5000;
+  var warming_interval = 4000;
+}else{
+  var brew_time = 5*60*1000;
+  var warming_interval = 4*60*1000;
+}
+
 happenen = Date.now();
 
 var brews =  [];
@@ -36,7 +43,7 @@ fs.readFileSync('brew.log').toString().split('\n').forEach(function (line) {
 			ts = parseInt(fields[0]);
 			brew_time = parseFloat(fields[1]);
 	  	data_arr=[ts,brew_time];
-			//console.log(data_arr);
+			console.log(data_arr);
 			brews.push(data_arr)
 });
 
@@ -86,15 +93,6 @@ console.log("begin");
 });
 
 
-
-
-//var server = http.createServer(function(request, response) {
-//	response.writeHead(200, {
-//		'Content-Type': 'text/html'
-//	});
-//	var rs = fs.createReadStream(__dirname + '/index.html');
-//	sys.pump(rs, response);
-//});
 server.listen(http_port);
 
 function monitor_mouse() {
@@ -103,21 +101,25 @@ function monitor_mouse() {
   			if((Date.now()-happenen) > warming_interval) {
   				if(!brewing) {
   					brewing=true;
-  				  events.insert(socket,"brewing :"+Date());
-				    tweet.tweet();
+//  				  events.insert(socket,"brewing :"+Date());
+	          if(development){
+		          console.log("I would be tweeting, but this is development mode");
+						}else{
+				      tweet.tweet();
+						}
   				}
   			}
   		}
   		if(!heating) {
   			if((Date.now()-happenen) > warming_interval) {
 					if(!pot_off){
-  				  events.insert(socket,"pot off: "+Date());
+//  				  events.insert(socket,"pot off: "+Date());
 						pot_off = true;
 					}
   			}
   		}
   		if(brew_last != 0.0) {
-  			events.insert(socket,"last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
+//  			events.insert(socket,"last brew was "+ (Date.now() - brew_last)/60000 + " Minutes Ago");
   		}
   		startTimeout(handle_timeout, 1000);
   	}
@@ -131,19 +133,21 @@ function monitor_mouse() {
   	}
 
   	function rig(e){
-			console.log("rig:"+e.time+' '+e.state);
   		var delta=0.0,
 			    ts,brew;
       happenen = Date.now();
   		if(e.state == 'D'){
+			  console.log("rig:"+e.time+' '+e.state+" heating == true");
 			  pot_off=false;
   			startRDown = e.time;
   			heating=true;
   		} else {
   			deltaT = e.time - startRDown;
         ts = new Date().getTime();
+			  console.log("rig:"+e.time+' '+e.state+" else");
 				if(brewing) {
 					brew = [ts,deltaT];
+			    console.log("rig: brewing! "+brew);
   			  events.insert(socket,brew);
 					fs.appendFile('brew.log',ts + ' ' + deltaT + '\n', function (err) {
 						 if (err)
@@ -170,6 +174,9 @@ socket.on('connection',function(client) {
 	m=events.recent();
 
 	for(var i in brews) {
+		if(development){
+		  console.log("sending: "+ brews[i]);
+		}
 		client.emit("message",brews[i]);
 	}
 });

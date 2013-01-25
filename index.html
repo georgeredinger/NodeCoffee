@@ -7,16 +7,20 @@
 	  <script type="text/javascript" src="http://coffee.redinger.me:4321/socket.io/socket.io.js"></script> 
 	  <script type="text/javascript" src="http://coffee.redinger.me:4321/jquery.flot.js"></script> 
 	  <script type="text/javascript" src="http://coffee.redinger.me:4321/jquery.flot.tooltip.min.js"></script> 
-		<!--		<script src="http://localhost:4321/socket.io/socket.io.js"></script> -->
+
+	  <script type="text/javascript" src="http://localhost:4321/jquery.flot.js"></script> 
+	  <script type="text/javascript" src="http://localhost:4321/jquery.flot.tooltip.min.js"></script> 
+		<script type="text/javascript" src="http://localhost:4321/socket.io/socket.io.js"></script> 
+
 <!--[if IE ]>
        <script>alert("Nerds don't let nerds use IE");</script>
 <![endif]-->
 		<script type="text/javascript">
+    var development=false;
     var d1=[];
     zone_delta=(new Date()).getTimezoneOffset()*60000;
 
 	function re_flot() {
-    console.log("re_flot");
 		var d=[
 		{ data: d1, label:'Brew Length'},
 	  ];
@@ -38,8 +42,11 @@
 	};
 
 $(document).ready(function() {
-	socket = io.connect('http://coffee.redinger.me:4321');
-	//socket = io.connect('http://localhost:4321');
+	if(development){
+	  socket = io.connect('http://localhost:4321');
+	}else{
+	  socket = io.connect('http://coffee.redinger.me:4321');
+	}
 	console.log("connecting...");
 	socket.on('connect', function() {
 		console.log('connect');
@@ -49,7 +56,9 @@ $(document).ready(function() {
 	//	$('#log ul').append('<li>' + message + '</li>');          
 	  message[0] = message[0]-zone_delta;
 		d1.push(message);
-//		window.scrollTo(0, document.body.scrollHeight);
+	  if(development){
+      console.log('message '+message);
+	  }
 		re_flot();
 	});
 
